@@ -1,7 +1,7 @@
 package com.maids.backendquiz.productsmanagement.domain.entities;
 
 
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
