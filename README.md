@@ -1,1 +1,0 @@
-![Diagram](products-management-maids/DiagramImage/diagram.png)
