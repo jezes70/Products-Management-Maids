@@ -21,7 +21,7 @@ public class ClientController {
     private final ClientService clientService;
 
     @Operation(summary = "Create a new client")
-    @ApiResponse(responseCode = "200", description = "Client created successfully", content = @Content(schema = @Schema(implementation = APIResponse.class)))
+    @ApiResponse(responseCode = "201", description = "Client created successfully", content = @Content(schema = @Schema(implementation = APIResponse.class)))
     @PostMapping("/create-client")
     public ResponseEntity<APIResponse<DataResponse>> createClient(@RequestBody @Valid ClientRequest clientRequest){
         return clientService.createClient(clientRequest);

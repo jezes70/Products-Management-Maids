@@ -24,7 +24,7 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(summary = "Create a new user account")
-    @ApiResponse(responseCode = "200", description = "User account created successfully")
+    @ApiResponse(responseCode = "201", description = "User account created successfully")
     @PostMapping("/create-account")
     public ResponseEntity<APIResponse<DataResponse>> register(@RequestBody @Valid UserRegisterDto userRegisterDto) {
         return authService.register(userRegisterDto);

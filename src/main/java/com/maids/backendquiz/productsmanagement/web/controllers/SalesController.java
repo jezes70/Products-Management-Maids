@@ -23,7 +23,7 @@ public class SalesController {
     private final SaleService saleService;
 
     @Operation(summary = "Create a new sale")
-    @ApiResponse(responseCode = "200", description = "Sale created successfully")
+    @ApiResponse(responseCode = "201", description = "Sale created successfully")
     @PostMapping("/create")
     public ResponseEntity<APIResponse<DataResponse>> sale(@RequestBody @Valid SaleRequest saleRequest){
         return saleService.createSale(saleRequest);

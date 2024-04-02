@@ -20,7 +20,7 @@ public class ProductController {
     private final ProductService productService;
 
     @Operation(summary = "Create a new product")
-    @ApiResponse(responseCode = "200", description = "Product created successfully", content = @Content(schema = @Schema(implementation = APIResponse.class)))
+    @ApiResponse(responseCode = "201", description = "Product created successfully", content = @Content(schema = @Schema(implementation = APIResponse.class)))
     @PostMapping("/create-product")
     public ResponseEntity<APIResponse<DataResponse>> createProduct(@RequestBody @Valid ProductRequest productRequest){
         return productService.createProduct(productRequest);
