@@ -135,6 +135,7 @@ public class ProductServiceImpl implements ProductService {
             if (Objects.nonNull(product)) {
                 dataResponse.setId(product.getId());
                 product.setAvailableQuantity(productRequest.getInitialQuantity());
+                product.setPrice(productRequest.getPrice());
                 product.setCategory(productRequest.getCategory());
                 product.setDescription(productRequest.getDescription());
                 product.setCreationDate(LocalDateTime.now());
