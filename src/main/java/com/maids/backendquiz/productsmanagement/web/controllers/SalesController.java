@@ -40,6 +40,6 @@ public class SalesController {
         if (startDate.isAfter(endDate)) {
             return ResponseEntity.badRequest().build();
         }
-        return saleService.getSalesByDateRange(startDate, endDate);
+        return saleService.generateReport(startDate, endDate);
     }
 }

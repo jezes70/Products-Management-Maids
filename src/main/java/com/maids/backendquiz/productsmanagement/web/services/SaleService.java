@@ -12,5 +12,5 @@ import java.util.List;
 
 public interface SaleService {
     ResponseEntity<APIResponse<DataResponse>> createSale(SaleRequest saleRequest);
-    ResponseEntity<APIResponse<SalesReport>> getSalesByDateRange(LocalDate startDate, LocalDate endDate);
+    ResponseEntity<APIResponse<SalesReport>> generateReport(LocalDate startDate, LocalDate endDate);
 }

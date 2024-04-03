@@ -35,6 +35,7 @@ public class SaleServiceImpl implements SaleService {
     @Override
     public ResponseEntity<APIResponse<DataResponse>> createSale(SaleRequest saleRequest) {
         DataResponse dataResponse = new DataResponse();
+
         Client client = clientRepository.findClientByEmail(saleRequest.getClientEmail());
 
         String adminUser = GetPrincipalUser.principalUser();
@@ -43,6 +44,7 @@ public class SaleServiceImpl implements SaleService {
             dataResponse.setMessage("User not found");
             return ResponseUtils.responseType(dataResponse, HttpStatus.NO_CONTENT);
         }
+        if (users.getRole().equals(Role.SALES)) {
             Product existingProduct = productRepository.findByName(saleRequest.getProduct());
 
             Sale newSale = new Sale();
@@ -53,60 +55,73 @@ public class SaleServiceImpl implements SaleService {
             newSale.setCreationDate(LocalDateTime.now());
 
             saleRepository.save(newSale);
-        for (TransactionRequest transactionRequest : saleRequest.getTransactionRequest()) {
-            Transaction transaction = new Transaction();
-            transaction.setSale(newSale);
-            transaction.setPrice(transactionRequest.getPrice());
-            transaction.setQuantity(transactionRequest.getQuantity());
-            transactionRepository.save(transaction);
-        }
+            for (TransactionRequest transactionRequest : saleRequest.getTransactionRequest()) {
+                Transaction transaction = new Transaction();
+                transaction.setSale(newSale);
+                transaction.setPrice(transactionRequest.getPrice());
+                transaction.setQuantity(transactionRequest.getQuantity());
+                transaction.setProduct(existingProduct);
+                transactionRepository.save(transaction);
+            }
 
             dataResponse.setMessage("Sale created successfully");
             return ResponseUtils.responseType(dataResponse, HttpStatus.CREATED);
+        }else{
+            dataResponse.setMessage("You are not authorized to create Product");
+            return ResponseUtils.responseType(dataResponse, HttpStatus.UNAUTHORIZED);
         }
 
-
-    @Override
-    public ResponseEntity<APIResponse<SalesReport>> getSalesByDateRange(LocalDate startDate, LocalDate endDate) {
-        SalesReport report = new SalesReport();
-
-        List<Sale> sales = saleRepository.findByCreationDateBetween(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
-
-        report.setTotalSales(sales.size());
-
-        double totalRevenue = sales.stream().mapToDouble(Sale::getTotal).sum();
-        report.setTotalRevenue(totalRevenue);
-
-        Map<Product, Integer> productSalesCount = new HashMap<>();
-        for (Sale sale : sales) {
-            for (Transaction transaction : sale.getTransactions()) {
-                Product product = transaction.getProduct();
-                productSalesCount.put(product, productSalesCount.getOrDefault(product, 0) + transaction.getQuantity());
-            }
-        }
-        List<Product> topSellingProducts = productSalesCount.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(10)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-        report.setTopSellingProducts(topSellingProducts);
-
-        Map<Users, Double> sellerRevenue = new HashMap<>();
-        for (Sale sale : sales) {
-            Users seller = sale.getSeller();
-            double saleRevenue = sale.getTotal();
-            sellerRevenue.put(seller, sellerRevenue.getOrDefault(seller, 0.0) + saleRevenue);
-        }
-        List<Users> topPerformingSellers = sellerRevenue.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(10)
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toList());
-        report.setTopPerformingSellers(topPerformingSellers);
-
-        return new ResponseEntity<>(new APIResponse<>(report),HttpStatus.OK);
     }
 
 
+    @Override
+    public ResponseEntity<APIResponse<SalesReport>> generateReport(LocalDate startDate, LocalDate endDate) {
+        SalesReport report = new SalesReport();
+        String adminUser = GetPrincipalUser.principalUser();
+
+        Users users = userRepository.findUsersByEmail(adminUser);
+        if (users.getRole().equals(Role.SALES)) {
+            List<Sale> sales = saleRepository.findByCreationDateBetween(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX));
+
+            report.setTotalSales(sales.size());
+
+            double totalRevenue = sales.stream().mapToDouble(Sale::getTotal).sum();
+            report.setTotalRevenue(totalRevenue);
+
+            Map<Product, Integer> productSalesCount = new HashMap<>();
+            for (Sale sale : sales) {
+                for (Transaction transaction : sale.getTransactions()) {
+                    Product product = transaction.getProduct();
+                    productSalesCount.put(product, productSalesCount.getOrDefault(product, 0) + transaction.getQuantity());
+                }
+            }
+            List<Product> topSellingProducts = productSalesCount.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(10)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+            report.setTopSellingProducts(topSellingProducts);
+
+            Map<Users, Double> sellerRevenue = new HashMap<>();
+            for (Sale sale : sales) {
+                Users seller = sale.getSeller();
+                double saleRevenue = sale.getTotal();
+                sellerRevenue.put(seller, sellerRevenue.getOrDefault(seller, 0.0) + saleRevenue);
+            }
+            List<Users> topPerformingSellers = sellerRevenue.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                    .limit(10)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toList());
+            report.setTopPerformingSellers(topPerformingSellers);
+
+            return new ResponseEntity<>(new APIResponse<>(report), HttpStatus.OK);
+
+
+        } else {
+            report.setMessage("You are not authorized to generate report");
+            return new ResponseEntity<>(new APIResponse<>(report), HttpStatus.OK);
+        }
+    }
 
 }
