@@ -1,3 +1,5 @@
+package com.maids.backendquiz.productsmanagement.algorithm;
+
 import java.util.*;
 
 public class ThreeSum {
